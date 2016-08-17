@@ -73,6 +73,7 @@ describe UsersController do
       let(:user2) { create(:user) }
 
       it "deletes user" do
+        user
         expect {
           delete :destroy, id: user.id
         }.to change(User, :count).by(-1)
@@ -85,12 +86,48 @@ describe UsersController do
 
 
       it "doesn't allow you to delete a user that isn't yours" do
-
+        user2
         expect{
           delete :destroy, id: user2.id
         }.to_not change(User, :count)
       end
 
+
+    end
+  end
+
+
+  context "user is not signed in" do
+    before do
+      session[:user_id] = nil
+    end
+
+    describe "GET #edit" do
+      it "won't render an edit page" do
+        get :edit, id: user.id
+
+        expect(response).to redirect_to new_session_path
+      end
+
+    end
+
+    describe "PUT #update" do
+      it "won't update a user" do
+        patch :update, id: user.id, user: attributes_for(:user, name: "New Name")
+        user.reload
+
+        expect(user.name).to eql("Foo")
+      end
+    end
+
+    describe "DELETE #destroy" do
+
+      it "won't delete a user" do
+        user
+        expect {
+          delete :destroy, id: user.id
+        }.to_not change(User, :count)
+      end
 
     end
   end
